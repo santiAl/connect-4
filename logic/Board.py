@@ -1,4 +1,5 @@
 from .Square import Square
+from marshmallow import Schema,fields
 
 class Board :
     def __init__(self):
@@ -62,6 +63,7 @@ class Board :
             matrix_str += " ".join(map(str, row)) + "\n"
         return matrix_str.strip()
 
- 
+class BoardSchema(Schema):
+    grid = fields.List(fields.List(fields.Str())) 
 
 

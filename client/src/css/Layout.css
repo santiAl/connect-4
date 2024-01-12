@@ -1,0 +1,110 @@
+.layout{
+    display: flex;
+    flex-direction: column;
+    background-color:  #3498db;
+}
+
+.links{
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+}
+
+h1 {
+    color: darkslategrey;
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+.game_text{
+    color: darkslategrey;
+    font-size: 1em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.link {
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    padding: 8px 16px;
+    margin: 5px;
+    border: 2px solid white;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  
+  }
+  
+  .link:hover {
+    background-color: white;
+    color: #3498db;
+  }
+
+.content{
+    min-height: 100vh;  /* at least  100%  of viewPort   */
+    background-color: white;
+    margin-top: 20px;
+}
+
+.game_list{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content:flex-start ;
+    margin-left: 10%;
+}
+
+.game_box {
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+    width: 25%;
+    padding: 8px 16px;
+    margin: 5px;
+    border: 2px solid #3498db;
+    border-radius: 4px;
+    background-color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .game_box:hover {
+    color: white;
+    background-color: #3498db;
+   
+  }
+
+  .home_button_list {
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+    padding: 8px 16px;
+    margin: 5px;
+    border: 2px solid #3498db;
+    border-radius: 4px;
+    background-color: white;
+    transition: background-color 0.3s ease, color 0.3s ease, border 0.3s ease;
+  }
+
+.home_button_list:hover {
+    background-color: #3498db;
+    color: #fff;
+    border: 2px solid black;
+}
+
+.home_button {
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+    padding: 8px 16px;
+    margin: 5px;
+    border: 2px solid #3498db;
+    border-radius: 4px;
+    background-color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+.home_button:hover {
+    background-color: #3498db;
+    color: #fff;
+}

@@ -13,6 +13,11 @@ class Game :
     def get_board(self):
         return self.__board
     
+    def get_player_last_move(self):
+        if (self.__move_amount % 2 == 0):
+            return Square.PLAYER_TWO
+        return Square.PLAYER_TWO
+    
     def set_board(self,new_board):
         self.__board = new_board
 

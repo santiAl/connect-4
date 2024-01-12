@@ -1,0 +1,63 @@
+
+.Grid{
+    display: grid;
+    justify-content: center;
+    margin-top: 1%;
+  }
+  
+  .row{
+    display: flex;
+    background-color: grey;
+    padding: 0.5%;
+  }
+  
+  
+  .cell{
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    border: white 5px solid ;
+    border-radius: 50%;
+  }
+
+  .cell_one{
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+    align-items: center;
+    background-color: red;
+    border: white 5px solid ;
+    border-radius: 50%;
+  }
+
+  .cell_two{
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+    align-items: center;
+    background-color: blue;
+    border: white 5px solid ;
+    border-radius: 50%;
+  }
+  
+  .col-button{
+    width: 35px;
+    height: 35px;
+    margin: 0.25%;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  
+  .hole_grid{
+    display: flex;
+    flex-direction: column;
+  }
+
+  .buttons_grid{
+    flex-direction: column;
+  }
+
+  
+
