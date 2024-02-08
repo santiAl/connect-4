@@ -40,3 +40,4 @@ while (not game.end()) :
     value = input("Ingrese una columna: ")
     game.update_board(int(value))
     
+

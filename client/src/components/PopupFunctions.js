@@ -23,7 +23,7 @@ export function openPopup() {
   }
 
 
-  export function openPopupWin({returnHome,handleRemoveGame}) {
+  export function openPopupWin({returnHome}) {
     Popup.create({
       title: 'Victoria',
       content: 'Felicitaciones.',
@@ -34,7 +34,6 @@ export function openPopup() {
             text: 'Cerrar',
             className: 'custom', 
             action: function () {
-              handleRemoveGame();
               Popup.close();
             },
           },
@@ -43,7 +42,6 @@ export function openPopup() {
             className: 'custom',
             action: function(){
               returnHome();
-              handleRemoveGame();
               Popup.close();
             },
           },
@@ -52,7 +50,7 @@ export function openPopup() {
     });
   }
 
-  export function openPopupDefeat({returnHome,handleRemoveGame}) {
+  export function openPopupDefeat({returnHome}) {
     Popup.create({
       title: 'Derrota',
       content: 'Gracias por jugar.',
@@ -63,7 +61,6 @@ export function openPopup() {
             text: 'Cerrar',
             className: 'custom', 
             action: function () {
-              handleRemoveGame();
               Popup.close();
             },
           },
@@ -72,7 +69,6 @@ export function openPopup() {
             className: 'custom',
             action: function(){
               returnHome();
-              handleRemoveGame();
               Popup.close();
             },
           },

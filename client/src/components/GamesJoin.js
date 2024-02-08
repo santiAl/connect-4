@@ -15,9 +15,8 @@ export const GamesJoin = ({getGamesJoin,idPlayer,joinGame}) => {
       setReloadKey((prevKey) => prevKey + 1);
     };
     
-    useEffect(()=> {
+    useEffect(()=> {         // update the list of games to join.
         getGamesJoin().then( games =>{
-          console.log(games);
           setGamesJoin(games);
         } ).catch(error =>{
               console.error('Error al obtener partidas para unirse:', error);
@@ -30,9 +29,10 @@ export const GamesJoin = ({getGamesJoin,idPlayer,joinGame}) => {
 
     return( 
     <div> 
-        <button className="home_button" onClick={()=>refresh()} > refresh </button>
+        <button className="home_button" onClick={()=>refresh()} > Refrescar </button>
         <div className="game_list">
-            {gamesJoin.map((data)=>(
+            {gamesJoin.length == 0 ? (<div className="no_games"> <p className="no_games_text"> No hay juegos para unirte... </p></div>) 
+                            : gamesJoin.map((data)=>(
                             <div className="game_box" >
                                   <h1 className="game_text"> Numero de juego: {data[0]} </h1>
                                   <h1 className="game_text"> Rival: Guest{data[1]} </h1>

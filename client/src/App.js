@@ -7,6 +7,7 @@ import { Routes,Route,useNavigate,useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout.js'
 import { Home } from './components/Home.js'
 import { GamesJoin } from './components/GamesJoin.js'
+import { History } from './components/History.js'
 
 
 function App() {
@@ -23,6 +24,22 @@ function App() {
     try{
         if (idPlayer == undefined) { return [] };
         const response = await fetch(`http://127.0.0.1:5000/get_games/${idPlayer}`,{method: 'GET'})
+        if (!response.ok) {
+          throw new Error('La solicitud no fue exitosa');
+        }
+        let res = await response.json();
+        return res;
+      }
+      catch (error) {
+        console.error('Error al realizar la solicitud:', error);
+      }
+  
+  }
+
+  const getGamesHistory = async (idPlayer)=>{
+    try{
+        if (idPlayer == undefined) { return [] };
+        const response = await fetch(`http://127.0.0.1:5000/get_games_history/${idPlayer}`,{method: 'GET'})
         if (!response.ok) {
           throw new Error('La solicitud no fue exitosa');
         }
@@ -87,6 +104,22 @@ function App() {
 
   }
 
+  const playerNum = async(gameId,playerId) => {
+    try{
+        const response =  await fetch(`http://127.0.0.1:5000/get_num_player/${gameId}/${playerId}`,{method: 'GET',mode: 'cors',})
+  
+        if (!response.ok) {
+          throw new Error('La solicitud no fue exitosa');
+        }
+        let res = await response.json();
+        return res;
+      }
+      catch (error) {
+        console.error('Error al realizar la solicitud:', error);
+      }
+
+  }
+
 
 
   const newGame = async (idPlayer) => {
@@ -138,8 +171,23 @@ function App() {
   }
 }
 
-  const putToken = (index,game_id) => {
-    socket.emit('put_token', {index : index , game_id: game_id});
+  const putToken = async (index,game_id) => {
+    try{
+      const joinPromise = new Promise((resolve)=>{
+            socket.emit('put_token', {index : index , game_id: game_id});
+            socket.on('error',function(response){
+              console.log(response.message);
+              resolve();
+            });
+
+      });  
+      await joinPromise;
+    }
+    finally{
+      socket.off('error');            // stop listening to that event.
+      socket.off('create_response');  // stop listening to that event.
+  }
+    
   }
 
   const showGrid = (idGame)=> {
@@ -154,6 +202,8 @@ function App() {
 
   useEffect(()=> {
     
+    socket.connect();
+
     next_player().then( json =>{      // gets the player id.
         setIdPlayer(json.next_player);
     
@@ -199,7 +249,9 @@ function App() {
             <Route path='/' element={<Layout/>} >
                 <Route path='/' element = {<Home newGame={()=> newGame(idPlayer)} getGames={()=>getGames(idPlayer)} showGrid={showGrid} />} />
                 <Route path='/join' element = {<GamesJoin  getGamesJoin={()=>getGamesJoin(idPlayer) } idPlayer={idPlayer} joinGame={joinGame} />} />
-                <Route path='/grid' element = {<Grid updateGrid={()=> getBoard(gameId,idPlayer)} amount = {playsAmount} putToken={putToken} gameId={gameId} />} />
+                <Route path='/grid' element = {<Grid updateGrid={()=> getBoard(gameId,idPlayer)} amount = {playsAmount} 
+                                              putToken={putToken} gameId={gameId} getPlayerNum={()=> playerNum(gameId,idPlayer) } />} />
+                <Route path='/history' element = {<History getGamesHistory={()=>getGamesHistory(idPlayer)} showGrid={showGrid} />} />
             </Route>
         </Routes>      
     </div>

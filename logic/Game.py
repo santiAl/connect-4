@@ -13,14 +13,37 @@ class Game :
     def get_board(self):
         return self.__board
     
+    # it returns the player who did the last move.
     def get_player_last_move(self):
         if (self.__move_amount % 2 == 0):
-            return Square.PLAYER_TWO
+            return Square.PLAYER_ONE
         return Square.PLAYER_TWO
+    
+    ## if the game is ended it returns the winner.
+    def get_winner(self):
+        if( self.end() ):    
+            if(self.__board.grid_is_full()):
+                return 0
+            else:
+                if self.__turn == Square.PLAYER_ONE:
+                    return 2
+                else:
+                    return 1 
+        else: return None
     
     def set_board(self,new_board):
         self.__board = new_board
 
+    def set_turn(self,player):
+        self.__turn = Square(player)
+
+    def get_move_amount(self):
+        return self.__move_amount
+    
+    # puts a piece regardless of the rules of the game
+    def strcit_put_token(self,row,col,player):
+        self.__board.strcit_put_token(row,col,player)
+        self.set_turn(1) if player == 2 else self.set_turn(2)   ## set turn to the opponent.
     
     def update_board(self,col):
         self.__board.put_token(col,self.__turn)
@@ -34,6 +57,6 @@ class Game :
             self.__turn = Square.PLAYER_ONE
     
     def end(self):
-        return self.__board.check_winner()
+        return self.__board.check_winner() or self.__board.grid_is_full()
     
     

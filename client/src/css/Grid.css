@@ -4,14 +4,14 @@
     justify-content: center;
     margin-top: 1%;
   }
-  
+
   .row{
     display: flex;
     background-color: grey;
     padding: 0.5%;
   }
-  
-  
+
+
   .cell{
     width: 30px;
     height: 30px;
@@ -32,6 +32,16 @@
     border-radius: 50%;
   }
 
+  .cell_one_preview{
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(243, 83, 83);
+    border: white 5px solid ;
+    border-radius: 50%;
+  }
+
   .cell_two{
     width: 30px;
     height: 30px;
@@ -41,15 +51,35 @@
     border: white 5px solid ;
     border-radius: 50%;
   }
-  
+
+  .cell_two_preview{
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+    align-items: center;
+    background-color: rgb(101, 79, 245);
+    border: white 5px solid ;
+    border-radius: 50%;
+  }
+
   .col-button{
     width: 35px;
     height: 35px;
     margin: 0.25%;
     border-radius: 50%;
     cursor: pointer;
+    background-color: rgb(243, 83, 83);
   }
-  
+
+  .col-button-player-two{
+    width: 35px;
+    height: 35px;
+    margin: 0.25%;
+    border-radius: 50%;
+    cursor: pointer;
+    background-color: rgb(101, 79, 245);
+  }
+
   .hole_grid{
     display: flex;
     flex-direction: column;
@@ -59,5 +89,21 @@
     flex-direction: column;
   }
 
-  
+  .go_back{
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+    padding: 8px 16px;
+    margin: 5px;
+    border: 2px solid #3498db;
+    border-radius: 4px;
+    background-color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .go_back:hover{
+    background-color: #3498db;
+    color: white;
+  }
+
 

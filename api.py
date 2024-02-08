@@ -5,14 +5,20 @@ from logic.Board import Board,BoardSchema
 from logic.Square import Square
 from typing import Tuple
 from flask_socketio import SocketIO, emit, join_room
+from app import *
+import os
+from itertools import count
 
-app = Flask(__name__)
+app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+
+##app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 ## Tuple got (id player 1, id player 2 , game ).
 current_games = dict[int,Tuple[int, int, Game]]({})
-next_player = 0  ## to get the players id.
+next_player = count(start=0)  ## to get the players id.
+game_id_counter = count(start=0)
 
 
 
@@ -20,7 +26,7 @@ next_player = 0  ## to get the players id.
 @socketio.on('create')
 def new_game(data): 
     new_game = Game()
-    game_id = len(current_games)
+    game_id = next(game_id_counter)
     current_games[game_id] = (data['idPlayer'],None,new_game)
     room = str(game_id)          
     join_room(room)     ## creates a new room .
@@ -52,45 +58,68 @@ def put_token(data):
     emit('put_token_response', {'game_id': game_id}, to=room)
 
 
-    
+
+## Returns the grid, the turn and the game state (if it's end or not). 
 @cross_origin
 @app.get('/get_board/<int:game_id>/<int:idPlayer>')
 def get_board(game_id,idPlayer):
     c_game = current_games[game_id]
     board_schema = BoardSchema()
-    json = board_schema.dump({"grid" : c_game[2].get_board().get_grid()})
+    json = board_schema.dump({"grid" : c_game[2].get_board().get_grid()})  
     player_num =  1 if c_game[0] == idPlayer else 2
     json["turn"] = c_game[2].get_turn().value == player_num    # if it's your turn return True , else return false .
     json["isEnd"] = c_game[2].end()
     return json
+
+
+# Returns the num of player you are. If you've created the game you're PlayerOne else you're PlayerTwo.
+@app.get('/get_num_player/<int:game_id>/<int:idPlayer>')
+def get_num_player(game_id,idPlayer):
+    c_game = current_games[game_id]
+    player_num =  1 if c_game[0] == idPlayer else 2
+    return jsonify({'playerNum': player_num})
     
 
-
-@cross_origin
+# Returns the next player id. (When other window is opened)
 @app.get('/get_player_id')
 def get_player_id(): 
-    global next_player
-    next_player = next_player + 1
-    return jsonify({'next_player': next_player})
+    next_id = next(next_player)
+    return jsonify({'next_player': next_id})
 
-@cross_origin
+# given a playerId return a list of games.
 @app.get('/get_games/<int:playerId>')
 def get_games(playerId):
-    keys = [ (key,None) if(secound_element == None) else (key,first_element) if(first_element != playerId) else  (key,secound_element) 
-            for key, (first_element, secound_element, _) 
-            in current_games.items() if first_element == playerId or secound_element == playerId]
-            ##Returns (game Id,opponent Id).  For each key,(first_element, secound_element, _) in current_games.items()   if first_element == playerId
+    keys = [ (key,None,game.get_turn().value == 1,False) if(secound_element == None) 
+            else (key,first_element,game.get_turn().value == 2,game.end()) if(first_element != playerId) 
+            else  (key,secound_element,game.get_turn().value == 1,game.end()) 
+            for key, (first_element, secound_element, game) 
+            in current_games.items() if (first_element == playerId or secound_element == playerId) and not game.end()]
+            ##Returns (game Id,opponent Id,turn,gameIsEnd).  For each key,(first_element, secound_element, _) in current_games.items()   if first_element == playerId
     return keys
 
-@cross_origin
+# given a playerId return a list of games to join.
 @app.get('/get_games_join/<int:playerId>')
 def get_games_join(playerId):
-    keys = [(key,first_element) for key, (first_element, secound_element , _) in current_games.items() if ( (first_element != playerId) and (secound_element == None)) ]
+    keys = [(key,first_element) for key, (first_element, secound_element , _) in current_games.items() 
+            if ( (first_element != playerId) and (secound_element == None)) ]
     return keys 
 
+
+# given a playerId return a list of games which are over.
+@app.get('/get_games_history/<int:playerId>')
+def get_games_history(playerId):
+    keys = [ (key,first_element,game.get_winner(),2) if(first_element != playerId) 
+            else  (key,secound_element,game.get_winner(),1) 
+            for key, (first_element, secound_element, game) 
+            in current_games.items() if (first_element == playerId or secound_element == playerId) and game.end()]
+            ##Returns (game Id,opponent Id,gameWinner,your playerNum).  For each key,(first_element, secound_element, game) in current_games.items()   if first_element == playerId
+    print(keys)
+    return keys
+
+
+# given a gameId remove that game from current_games.
 @app.post('/remove_game/<int:gameId>')
 def remove_game(gameId): 
-    print(current_games.keys())
     if gameId in current_games.keys():
         current_games.pop(gameId)
         return jsonify({'success': gameId})

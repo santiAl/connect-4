@@ -1,8 +1,6 @@
 import { useEffect, useState,useRef } from "react";
-import { Outlet,Routes,Route } from "react-router-dom";
 import '../css/Home.css';
 import { usePageVisibility } from 'react-page-visibility';
-import { redirect } from "react-router-dom";
 
 
 
@@ -65,22 +63,28 @@ export const Home = ({newGame,getGames,showGrid}) => {
 
 
 
-
+    
     return( 
     <div className="home"> 
         
-        <button className="home_button" onClick={()=> handleNewGame()}> new_game </button>
-        <button className="home_button" onClick={()=> refresh()} > refresh </button>
+        <button className="home_button" onClick={()=> handleNewGame()}> Crear nuevo juego </button>
+        <button className="home_button" onClick={()=> refresh()} > Refrescar </button>
         
         <div className="game_list">
-            {myGames.map((data)=>(
-                        <div className="game_box" >
+            
+            {myGames.length === 0 ? (<div className="no_games"> <p className="no_games_text"> Todavia no tienes juegos... </p></div>) 
+                        : (myGames.map((data)=>(
+                        
+                        <div className={data[1] == null ? "game_box" : data[2] ? "game_box_your_turn" : "game_box"} >
                               <h1 className="game_text"> Numero de juego: {data[0]} </h1> 
                               <h1 className="game_text"> {data[1] != null ? 'Oponente: Guest' + data[1] : 'Esperando oponente' } </h1>
-
-                              <button className="home_button_list" onClick={()=> showGrid(data[0])} > Go to grid </button>
+                              <h1 className="game_text"> {data[1]!= null ? data[2] ? 'Tu turno' : 'Turno del oponente' : null } </h1> 
+                              {data[1] != null ?
+                              <button className="home_button_list" onClick={()=> showGrid(data[0])} > Ir al tablero </button>
+                              : null
+                              }
                         </div>
-                        ))}
+                        )))}
         </div>
         
     </div>);
