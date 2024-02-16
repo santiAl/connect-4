@@ -13,7 +13,6 @@ export const History= ( {getGamesHistory,showGrid} ) =>{
      useEffect( (  )=>{
         
         getGamesHistory().then( games =>{
-            console.log(games);
             setGamesHistory(games);
           } ).catch(error =>{
                 console.error('Error al obtener partidas:', error);

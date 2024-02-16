@@ -14,7 +14,7 @@ Feature: connect-4
 
 # ------SCENARY #2
 
-            Scenario: Poner una ficha por cada jugador
+            Scenario: Cambio de turno
             Given creo un nuevo juego
             When pongo una ficha en la columna 0
             And pongo una ficha en la columna 0

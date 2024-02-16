@@ -17,9 +17,12 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const configTabs = 1;         // A new player is created when you open a new tab.
+  const configWindows = 2;      // A new player is created when you open a new window.
 
+  const config = configTabs;    // Current configuration.
   
-
+  // Return a json with the current games.
   const getGames = async (idPlayer)=>{
     try{
         if (idPlayer == undefined) { return [] };
@@ -36,6 +39,7 @@ function App() {
   
   }
 
+  // Return a json with the ended games.
   const getGamesHistory = async (idPlayer)=>{
     try{
         if (idPlayer == undefined) { return [] };
@@ -52,6 +56,7 @@ function App() {
   
   }
 
+  // Return a json with games to join.
   const getGamesJoin = async (idPlayer) => {
     try{
         if (idPlayer == undefined) { return [] };
@@ -69,7 +74,7 @@ function App() {
   }
 
 
-
+  // Returns the grid, the turn and the game state (if it's end or not). 
   const getBoard = async (game_id,idPlayer) => {
     try{
         const response = await fetch(`http://127.0.0.1:5000/get_board/${game_id}/${idPlayer}`,{method: 'GET'})
@@ -87,7 +92,7 @@ function App() {
   
   }
 
-
+  // Return an id for the new player. 
   const next_player = async() => {
     try{
         const response =  await fetch(`http://127.0.0.1:5000/get_player_id`,{method: 'GET',mode: 'cors',})
@@ -104,6 +109,7 @@ function App() {
 
   }
 
+  // Return the number of player (it's 1 if you have created the game or 2 if you have joined the game).
   const playerNum = async(gameId,playerId) => {
     try{
         const response =  await fetch(`http://127.0.0.1:5000/get_num_player/${gameId}/${playerId}`,{method: 'GET',mode: 'cors',})
@@ -121,7 +127,7 @@ function App() {
   }
 
 
-
+  // Create a new game.
   const newGame = async (idPlayer) => {
     try{
       const gamePromise = new Promise( (resolve) =>{
@@ -148,6 +154,7 @@ function App() {
  
   }
 
+  // Join a new game
   const joinGame = async (game_id,idPlayer) => {
     try{
       const joinPromise = new Promise((resolve)=>{
@@ -171,6 +178,7 @@ function App() {
   }
 }
 
+  // Put token into the game. Index is the number of column where you want to put the token.
   const putToken = async (index,game_id) => {
     try{
       const joinPromise = new Promise((resolve)=>{
@@ -190,8 +198,12 @@ function App() {
     
   }
 
+  // Change the game id and go to the grid.
   const showGrid = (idGame)=> {
       setGameId(idGame);
+      if (config == configWindows){
+        socket.emit('join_room', {game_id: idGame}); // Join room.
+      }
       navigate('/grid');
   };
 
@@ -204,22 +216,26 @@ function App() {
     
     socket.connect();
 
-    next_player().then( json =>{      // gets the player id.
-        setIdPlayer(json.next_player);
-    
-      } ).catch(error =>{
-            console.error('Error al obtener el nuevo jugador:', error);
-      }
-    );
-    
-    return ()=>{
-      socket.disconnect();    // the socket is created with the component and when the component is distroyed the socket is disconected.
-    };
+    if ((localStorage.getItem('idPlayer') != null) && config == configWindows) {
+        setIdPlayer(parseInt(localStorage.getItem('idPlayer')));    // Set the idPlayer.
+    }
+    else{
+          next_player().then( json =>{      // gets the player id.
+              setIdPlayer(json.next_player);
+              if (config == configWindows){  localStorage.setItem('idPlayer',json.next_player) };  // Set the localStorage to save the idPlayer.
+            } ).catch(error =>{
+                  console.error('Error al obtener el nuevo jugador:', error);
+            }
+          );
+  }
+  return ()=>{
+    socket.disconnect();    // the socket is created with the component and when the component is distroyed the socket is disconected.
+  };
 
   },[]);
 
 
-
+  // If there's a rival movement the playsAmount is changed.
   const handlePutToken = (response) => {
       if( (window.location.pathname == '/grid') && (gameId == response.game_id)  ){   // if you are in /grid and you're playing that game.
         const new_amount = playsAmount + 1;     // update board.

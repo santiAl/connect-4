@@ -22,7 +22,7 @@ game_id_counter = count(start=0)
 
 
 
-@cross_origin
+
 @socketio.on('create')
 def new_game(data): 
     new_game = Game()
@@ -30,9 +30,10 @@ def new_game(data):
     current_games[game_id] = (data['idPlayer'],None,new_game)
     room = str(game_id)          
     join_room(room)     ## creates a new room .
+    print(game_id)
     emit('create_response', {'game_id': game_id}, room=room)
 
-@cross_origin
+
 @socketio.on('join')
 def join_game(data): 
     game_id = data['game_id']
@@ -47,7 +48,17 @@ def join_game(data):
         emit('error',{'message': "El juego al que intenta unirse ya ha comenzado."})
 
 
-@cross_origin
+
+@socketio.on('join_room')
+def join_game(data): 
+    game_id = data['game_id']
+    room = str(game_id)          
+    join_room(room)     ## join into the room.
+    emit('join_response', {'game_id': game_id}, room=room)
+
+
+
+
 @socketio.on('put_token')
 def put_token(data):
     game_id = data['game_id']
@@ -60,7 +71,6 @@ def put_token(data):
 
 
 ## Returns the grid, the turn and the game state (if it's end or not). 
-@cross_origin
 @app.get('/get_board/<int:game_id>/<int:idPlayer>')
 def get_board(game_id,idPlayer):
     c_game = current_games[game_id]
@@ -113,7 +123,6 @@ def get_games_history(playerId):
             for key, (first_element, secound_element, game) 
             in current_games.items() if (first_element == playerId or secound_element == playerId) and game.end()]
             ##Returns (game Id,opponent Id,gameWinner,your playerNum).  For each key,(first_element, secound_element, game) in current_games.items()   if first_element == playerId
-    print(keys)
     return keys
 
 
