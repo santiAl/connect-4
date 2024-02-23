@@ -4,7 +4,7 @@ from logic.Game import Game
 from logic.Board import Board,BoardSchema
 from logic.Square import Square
 from typing import Tuple
-from flask_socketio import SocketIO, emit, join_room
+from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
 from app import *
 import os
 from itertools import count
@@ -22,51 +22,52 @@ game_id_counter = count(start=0)
 
 
 
-
-@socketio.on('create')
-def new_game(data): 
+@app.post('/new_game/<int:idPlayer>')
+def new_game(idPlayer): 
     new_game = Game()
     game_id = next(game_id_counter)
-    current_games[game_id] = (data['idPlayer'],None,new_game)
-    room = str(game_id)          
-    join_room(room)     ## creates a new room .
-    print(game_id)
-    emit('create_response', {'game_id': game_id}, room=room)
+    current_games[game_id] = (idPlayer,None,new_game)
+    return jsonify({'game_id': game_id})
 
-
-@socketio.on('join')
-def join_game(data): 
-    game_id = data['game_id']
-    idPlayer = data['idPlayer']
+@app.post('/join_game/<int:game_id>/<int:idPlayer>')
+def join_game(game_id,idPlayer): 
+    game_id = game_id
+    idPlayer = idPlayer
     c_game = current_games[game_id]
     if(c_game[1] == None  ):
         current_games[game_id] = (c_game[0],idPlayer,c_game[2])
-        room = str(game_id)          
-        join_room(room)     ## join into the room.
-        emit('create_response', {'game_id': game_id}, room=room)
+        return jsonify({'game_id': game_id})
     else:
-        emit('error',{'message': "El juego al que intenta unirse ya ha comenzado."})
+        raise ValueError("El juego al que intenta unirse ya ha comenzado.")
 
 
-
-@socketio.on('join_room')
-def join_game(data): 
+@socketio.on('join_game')
+def join(data): 
     game_id = data['game_id']
     room = str(game_id)          
     join_room(room)     ## join into the room.
     emit('join_response', {'game_id': game_id}, room=room)
 
+@socketio.on('leave_game')
+def leave(data):
+    game_id = data['game_id']
+    room = str(game_id)
+    leave_room(room)
 
 
-
+## Returns the grid, the turn and the game state (if it's end or not). 
 @socketio.on('put_token')
 def put_token(data):
-    game_id = data['game_id']
-    index = data['index']
+    game_id = data['game_id']      
+    index = data['index']      ## column where you want to set the token.
     c_game = current_games[game_id]
     c_game[2].update_board(index)
     room = str(game_id)
-    emit('put_token_response', {'game_id': game_id}, to=room)
+    board_schema = BoardSchema()
+    json = board_schema.dump({"grid" : c_game[2].get_board().get_grid()})  
+    json["turn"] = c_game[2].get_turn().value    # if it's your turn return True , else return false .
+    json["isEnd"] = c_game[2].end()
+    emit('put_token_response', json , to=room)
 
 
 

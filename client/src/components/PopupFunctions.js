@@ -76,3 +76,34 @@ export function openPopup() {
       },
     });
   }
+
+
+  export function openPopupConnection({refresh}) {
+    Popup.create({
+      title: 'Aviso',
+      content: 'Hubo un problema con la conexion.',
+      className: 'waiting_move',
+      buttons: {
+        right: [
+          {
+            text: 'Cerrar',
+            className: 'custom', 
+            action: function () {
+              Popup.close();
+            },
+          },
+          {
+            text: 'Refrescar.',
+            className: 'custom',
+            action: function(){
+              refresh();
+              Popup.close();
+            },
+          },
+        ],
+      },
+    });
+  }
+
+
+

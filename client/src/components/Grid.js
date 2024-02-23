@@ -1,12 +1,12 @@
 import { Square } from './Square.js';
 import React, { useState, useEffect,useRef} from 'react';
 import '../css/Grid.css';
-import { json } from 'react-router-dom';
 import Popup from 'react-popup';
-import {openPopup, openPopupDefeat, openPopupWin} from './PopupFunctions.js';
+import {openPopup, openPopupDefeat, openPopupWin,openPopupConnection} from './PopupFunctions.js';
 import { useNavigate } from 'react-router-dom';
+import { socket } from './socket.js';
 
-export function Grid({updateGrid,amount,putToken,gameId,getPlayerNum}){
+export function Grid({updateGrid,gameId,getPlayerNum}){
     
     const initialGrid = Array(6)
     .fill(null)
@@ -20,9 +20,11 @@ export function Grid({updateGrid,amount,putToken,gameId,getPlayerNum}){
 
     const [grid,setGrid] = useState(initialGrid);
     const [turn,setTurn] = useState(undefined);
-    const [isEnd,setIsEnd] = useState(false);
-    const [playerNum,setPlayerNum] = useState(undefined);
-    const rowPreviewRef = useRef(null);
+    const [isEnd,setIsEnd] = useState(false);          
+    const [playerNum,setPlayerNum] = useState(undefined);       // if you're the red player (player 1) or the blue player.
+    const rowPreviewRef = useRef(null);         // Used in the preview.
+    const [socState,setSockState] =  useState(false);   // it's true if the socket is connected or false if the socket is not connected.
+    const [reloadKey,setReloadKey] = useState(false);       // Used to reload the component.
     const navigate = useNavigate();   // it is for do redirects.
 
     const heigth = 6;
@@ -31,10 +33,11 @@ export function Grid({updateGrid,amount,putToken,gameId,getPlayerNum}){
 
 
 
-    const putTokenNew = (index,gameId)=>{
-        putToken(index,gameId);
-    };
-
+      // Put token into the game. Index is the number of column where you want to put the token.
+  const putToken = async (index,game_id) => {
+            socket.emit('put_token', {index : index , game_id: game_id});    
+  }
+    // Given a json with the grid returns an array with the grid.
     function JsonToGrid(new_grid){
   
         const res = Array(6).fill(null).map( (_,i) =>
@@ -48,30 +51,9 @@ export function Grid({updateGrid,amount,putToken,gameId,getPlayerNum}){
            return res;
      }
 
-
-     const removeGame= async (gameId )=>{
-        try{
-          const response =  await fetch(`http://127.0.0.1:5000/remove_game/${gameId}`,{method: 'POST',mode: 'cors',})
-    
-          if (!response.ok) {
-            throw new Error('La solicitud no fue exitosa');
-          }
-          console.log("ejecuta");    
-        }
-        catch (error) {
-          console.error('Error al realizar la solicitud:', error);
-        }
-    
-      }
-
     const returnHome = ()=>{
         navigate('/');
     };
-
-    const handleRemoveGame = ()=>{
-        removeGame(gameId);
-    };
-
 
     const tokenPreview = (col)=>{
         const newGrid = JSON.parse(JSON.stringify(grid.map(row => [...row])));
@@ -94,8 +76,7 @@ export function Grid({updateGrid,amount,putToken,gameId,getPlayerNum}){
                         if(playerNum == 1){ newGrid[row-1][col].squareValue = playerOnePreview; }
                         else{ newGrid[row-1][col].squareValue = playerTwoPreview;}; 
                     }
-                    if(rowPreviewRef.bool){      
-                        rowPreviewRef.current = row - 1;
+                    if(rowPreviewRef.bool){      // It's false if the onMouseLeave event is executed before the onMouseEnter event.
                         setGrid(newGrid);      
                     }
 
@@ -118,19 +99,58 @@ export function Grid({updateGrid,amount,putToken,gameId,getPlayerNum}){
         }, 0);
     }
 
+    const refresh = ()=> {
+        setReloadKey(!reloadKey);
+      };
+
     useEffect(()=> {
                 
+
+        socket.on('put_token_response',(response)=>{
+            if(! response.isEnd ){      
+                setGrid(JsonToGrid(response.grid));
+                setTurn(response.turn === playerNum);
+            }else{
+                setIsEnd(true);   
+                setGrid(JsonToGrid(response.grid));
+                if( turn  && turn != undefined){  // when turn is undefined the user is entering from /history.
+                    openPopupWin({returnHome});
+                }else{ if( !turn && turn != undefined){ openPopupDefeat({returnHome}); } };  
+            }    
+        });
+
+        socket.on('error',(error)=>{
+                console.error("Se produjo un error", error);   // Handle errors.
+        });
+
+        return ()=>{
+            socket.off('put_token_response');   // Stop listening to that event.
+            socket.off('error');
+        };
+
+    },[turn]);
+
+
+// It's executed the first time you enter the board and each time the board need to be reloaded due to a socket disconection.
+    useEffect(()=> {    
+            
+            if(socket.connected){
+                socket.emit('join_game', { game_id : gameId }); // Join room.
+                setSockState(true);
+            }
+            
             if(! isEnd ){        // if it's not ended.
-                updateGrid().then(json => { 
+                getPlayerNum().then(json => {      // The number of player is set.
+                    setPlayerNum(json.playerNum);
+                    return updateGrid();           // The board is set.
+                }
+                ) .then(json => { 
                     if(! json.isEnd ){      
                         setGrid(JsonToGrid(json.grid));
                         setTurn(json.turn);
                     }else{
                         setIsEnd(true);   
-                        setGrid(JsonToGrid(json.grid));
-                        if( !json.turn && turn != undefined){  // when turn is undefined the user is entering from /history.
-                            openPopupWin({returnHome});
-                        }else{ if(json.turn && turn != undefined){ openPopupDefeat({returnHome}); } };  
+                        setGrid(JsonToGrid(json.grid)); 
                     }    
                 }
                 ).catch(error => {
@@ -138,44 +158,32 @@ export function Grid({updateGrid,amount,putToken,gameId,getPlayerNum}){
                 });
             }
 
-
-        return ()=>{
-
-        };
-        
-
-    },[amount]);
-
-
-
-    useEffect(()=> {
-                
-            if(! isEnd ){        // if it's not ended.
-                console.log(getPlayerNum());
-                getPlayerNum().then(json => { 
-                    setPlayerNum(json.playerNum);
-                }
-                ).catch(error => {
-                    console.error('Error al obtener el nuevo grid:', error);
-                });
-            }
-
+            socket.on('disconnect',()=>{
+                    openPopupConnection({refresh});
+                    setSockState(false);
+            });
+            
+            return ()=>{
+                socket.off('disconnect');
+                socket.emit('leave_game', { game_id : gameId } );   // When you leave the board, you leave the room.
+            };
     
 
-    },[]);
+    },[reloadKey]);
 
     
     return(
         <div className='hole_grid'>
             <div className='buttons_grid'>        
-                    { !isEnd ?      // if it's not ended.
+                    { socState ? !isEnd ?      // if it's not ended.
                     Array.from({length: 7},(_,index) => (   // buttons to put the tokens.
-                        turn ? <button onClick={()=> putTokenNew(index,gameId)} onMouseEnter={()=>setPreview(index)} 
+                        turn ? <button onClick={()=> putToken(index,gameId)} onMouseEnter={()=>setPreview(index)} 
                                 onMouseLeave={()=>quitPreview(index)} className={playerNum==1 ? 'col-button' : 'col-button-player-two'}> ▼  </button>
                              : <button onClick={()=> openPopup() } 
                              className={playerNum==1 ? 'col-button' : 'col-button-player-two'} style={{ cursor: 'auto' } }> ▼ </button>
                     )) 
-                    : <button className="go_back" onClick={()=> navigate(-1)} > {'<< Volver'}  </button> } 
+                    : <button className="go_back" onClick={()=> navigate(-1)} > {'<< Volver'}  </button>
+                    : <button className="home_button" onClick={()=>refresh()} > Refrescar </button> } 
             </div>
             <div className='Grid'> 
                 {grid.map((row,i) => (      // grid render.

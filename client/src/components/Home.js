@@ -28,7 +28,6 @@ export const Home = ({newGame,getGames,showGrid}) => {
       useEffect(()=> {
         const pollingCallback = () => {
                 getGames().then( games =>{
-                  console.log(games);
                   setMyGames(games);
                 } ).catch(error =>{
                       console.error('Error al obtener partidas:', error);
